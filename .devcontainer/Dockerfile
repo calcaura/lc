@@ -8,9 +8,13 @@ RUN apk update && apk add \
     build-base \
     coreutils \
     clang \
+    clang-extra-tools \
     curl \
     git \
     github-cli \
+    gdb \
+    lld \
+    lldb \
     make \
     openssh-client \
     sudo \

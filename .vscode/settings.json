@@ -1,0 +1,22 @@
+{
+    "files.autoSave": "afterDelay",
+    "editor.formatOnSave": true,
+    "extensions.supportUntrustedWorkspaces": {},
+    "terminal.integrated.persistentSessionScrollback": 10000,
+    "terminal.integrated.scrollback": 100000,
+    "explorer.confirmPasteNative": false,
+    "explorer.confirmDragAndDrop": false,
+    "svg.preview.boundingBox": true,
+    "svg.preview.transparencyGrid": true,
+    "[json]": {
+        "editor.tabSize": 2
+    },
+    "[cpp]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    "C_Cpp.clang_format_fallbackStyle": "Google",
+    "C_Cpp.clang_format_style": "file",
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "git.ignoreMissingGitWarning": true
+}
