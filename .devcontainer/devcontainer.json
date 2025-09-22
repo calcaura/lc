@@ -1,0 +1,43 @@
+{
+    "name": "Leetcode",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "args": {
+            "HOST_USER": "${env:USER}"
+        },
+        "context": "${localWorkspaceFolder}"
+    },
+    "runArgs": [
+        "--network",
+        "host",
+        "-h",
+        "leetcode-dev",
+        "--add-host",
+        "leetcode-dev.local:127.0.1.1",
+    ],
+    "mounts": [
+        "source=${env:HOME}${env:USERPROFILE},target=/home/${env:USER}/host,type=bind"
+    ],
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+    "workspaceFolder": "/workspace",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "github.copilot",
+                "github.vscode-github-actions",
+                "ms-azuretools.vscode-docker",
+                "ms-python.python",
+                "ms-python.isort",
+                "ms-python.vscode-pylance",
+                "ms-python.debugpy",
+                "tamasfe.even-better-toml",
+                "vadimcn.vscode-lldb"
+            ],
+            "settings": {
+                "search.exclude": {}
+            }
+        }
+    },
+    "remoteUser": "${env:USER}",
+    "postCreateCommand": "/opt/lc/post-create.sh"
+}
