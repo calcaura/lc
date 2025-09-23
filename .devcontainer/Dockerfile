@@ -6,13 +6,15 @@ RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repo
 RUN apk update && apk add \
     bash \
     build-base \
-    coreutils \
     clang \
     clang-extra-tools \
+    coreutils \
     curl \
+    gdb \
     git \
     github-cli \
-    gdb \
+    gtest \
+    gtest-dev \
     lld \
     lldb \
     make \
