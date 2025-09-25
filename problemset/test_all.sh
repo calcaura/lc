@@ -42,6 +42,8 @@ function build_single() {
     sync
 }
 
+export CXX_FLAGS_EXTRA="-fsanitize=address -fsanitize=undefined"
+
 for dir in $DIRS; do
     build_single "$dir"
 done
