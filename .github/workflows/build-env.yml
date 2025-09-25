@@ -1,0 +1,30 @@
+
+name: CLI Tests
+
+on:
+  merge_group:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  pull_request:
+    paths: 
+      - .devcontainer/**
+      - .github/workflows/build-env.yml
+
+jobs:
+  build-env:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Docker build
+        run: |
+          docker build -t build-env-test -f .devcontainer/Dockerfile .
+
+
+      
