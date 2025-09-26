@@ -4,13 +4,11 @@
         {
             "label": "Build Current File",
             "type": "shell",
-            "command": "clang++",
+            "command": "make",
             "args": [
-                "-g", // include debug info
-                "-std=c++17", // C++ standard
-                "${file}", // current open file
-                "-o",
-                "${workspaceFolder}/build/${fileBasenameNoExtension}"
+                "-C",
+                "${fileDirname}",
+                "build"
             ],
             "group": {
                 "kind": "build",
