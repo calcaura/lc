@@ -1,12 +1,4 @@
-WORKSPACE_BUILD_ROOT ?= /tmp
-CXX_FLAGS_EXTRA ?=
-
-# Compiler and flags
-CXX=clang++
-TIDY=clang-tidy
-CXX_FLAGS=-std=c++17 -Wall -Wextra -Werror -g $(CXX_FLAGS_EXTRA)
-CXX_LIBS=
-CXX_LIBS_TEST=-lgtest -lgtest_main
+include ../vars.mk
 
 # Output directories and files
 OUTPUT_FOLDER=$(WORKSPACE_BUILD_ROOT)/$(notdir $(CURDIR))

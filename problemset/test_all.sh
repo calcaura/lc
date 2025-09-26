@@ -35,14 +35,15 @@ die_with() {
 
 function build_single() {
     local dir="$1"
+    local title=$(head -1 "$dir/README.md" | sed 's/^#* //g')
     sync
-    echo "::group::Test $dir"
+    echo "::group::$title ($dir)"
     make -C "$dir"
     printf "::endgroup::\n\n"
     sync
 }
 
-export CXX_FLAGS_EXTRA="-fsanitize=address -fsanitize=undefined"
+export CXX_FLAGS_EXTRA="-g -O0 -fsanitize=address -fsanitize=undefined"
 
 for dir in $DIRS; do
     build_single "$dir"
