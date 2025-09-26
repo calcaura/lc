@@ -1,5 +1,5 @@
 WORKSPACE_BUILD_ROOT ?= /tmp
-CXX_FLAGS_EXTRA ?= -g 
+CXX_FLAGS_EXTRA ?= -g -O0 -fsanitize=address -fsanitize=undefined
 
 # Compiler and flags
 CXX=clang++
