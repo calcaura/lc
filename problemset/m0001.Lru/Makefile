@@ -3,7 +3,8 @@ WORKSPACE_BUILD_ROOT ?= /tmp
 # Compiler and flags
 CXX=clang++
 TIDY=clang-tidy
-CXX_FLAGS=-std=c++17 -Wall -Wextra -Werror -g
+CXX_INC_PATHS=-I/workspace/libs
+CXX_FLAGS=-std=c++17 -Wall -Wextra -Werror -g $(CXX_INC_PATHS)
 CXX_LIBS=
 CXX_LIBS_TEST=-lgtest -lgtest_main
 
@@ -17,7 +18,7 @@ OBJ_FILES := $(patsubst %.cpp,$(OUTPUT_FOLDER)/%.o,$(FILE_LIST))
 
 
 
-$(OUTPUT_FOLDER)/%.o: %.cpp *.hpp | prep
+$(OUTPUT_FOLDER)/%.o: %.cpp | prep
 	$(TIDY) $< -- $(CXX_FLAGS)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 

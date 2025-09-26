@@ -3,9 +3,8 @@
 
 #include <algorithm>
 #include <iostream>
+#include <lc_libs/lru.hpp>
 #include <vector>
-
-#include "lru.hpp"
 
 TEST(LruCacheTest, BasicOperations) {
   lru::Lru<int, float> cache{3lu, {{10, 42.0f}, {20, 73.0f}, {30, 101.0f}}};
