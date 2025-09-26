@@ -1,10 +1,13 @@
 #pragma once
 #include <initializer_list>
+#include <memory>
 
 namespace lc_libs {
 
 template <typename T>
 struct ListNodeBase {
+  using UniquePtr = std::unique_ptr<ListNodeBase<T>>;
+
   T val;
   ListNodeBase* next;
   ListNodeBase() : val(0), next(nullptr) {}
@@ -71,5 +74,58 @@ struct ListNodeBase {
 
   // Destructor to free the entire list with the exception of the head node
   ~ListNodeBase() { delete next; }
+
+  /**
+   * Merge two sroted lists
+   */
+  static ListNodeBase* merge(ListNodeBase* list1, ListNodeBase* list2) {
+    ListNodeBase head;
+    ListNodeBase* crt{&head};
+
+    while (list1 || list2) {
+      if (list1) {
+        if (list2) {
+          if (list1->val <= list2->val) {
+            crt->next = list1;
+            crt = list1;
+            list1 = list1->next;
+          } else {
+            crt->next = list2;
+            crt = list2;
+            list2 = list2->next;
+          }
+        } else {
+          // List 2 is empty, we can break
+          crt->next = list1;
+          break;
+        }
+      } else {
+        // List 1 is empty, we can break
+        crt->next = list2;
+        break;
+      }
+    }
+    return head.unlink();
+  }
 };
 }  // namespace lc_libs
+
+#if __has_include(<iostream>)
+#include <iostream>
+namespace lc_libs {
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const ListNodeBase<T>& node) {
+  const ListNodeBase<T>* crt = &node;
+  os << "[";
+  while (crt) {
+    os << crt->val;  // print the value
+    crt = crt->next;
+    if (crt) {
+      os << ", ";  // print arrow if there is a next node
+    }
+  }
+  os << "]";
+  return os;
+}
+}  // namespace lc_libs
+#endif  // __has_include(<iostream>)

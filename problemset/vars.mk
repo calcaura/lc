@@ -5,6 +5,6 @@ CXX_FLAGS_EXTRA ?= -g -O0 -fsanitize=address -fsanitize=undefined
 CXX=clang++
 TIDY=clang-tidy
 CXX_INC_PATHS=-I/workspace/libs
-CXX_FLAGS=-std=c++17 -Wall -Wextra -Werror $(CXX_FLAGS_EXTRA) $(CXX_INC_PATHS)
+CXX_FLAGS=-std=c++20 -Wall -Wextra -Werror $(CXX_FLAGS_EXTRA) $(CXX_INC_PATHS)
 CXX_LIBS=
 CXX_LIBS_TEST=-lgtest -lgtest_main
