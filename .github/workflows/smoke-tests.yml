@@ -1,0 +1,35 @@
+
+name: Smoke Tests
+
+on:
+  merge_group:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  pull_request:
+    paths: 
+      - .devcontainer/**
+      - .github/workflows/smoke-tests.yml
+      - problemset/**
+
+jobs:
+  build-env:
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/calcaura/calcaura-lc-build-env:1.0.0
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Git safe directory
+        run: |
+          sudo ln -sf ${GITHUB_WORKSPACE} /workspace
+          git config --global --add safe.directory /workspace
+
+      - name: Run tests
+        run: |
+          ./problemset/test_all.sh
