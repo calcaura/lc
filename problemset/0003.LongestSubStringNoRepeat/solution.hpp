@@ -1,8 +1,7 @@
+#pragma once
 
-#include <algorithm>
 #include <array>
-#include <iostream>
-#include <vector>
+#include <string>
 
 struct Window {
   size_t start{};
@@ -43,5 +42,3 @@ class Solution {
     return max.size;
   }
 };
-
-int main() { return 0; }

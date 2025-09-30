@@ -33,8 +33,3 @@ TEST(TemplateNameTest, BasicOperations) {
                "ygm", "ygn", "ygo", "yhm", "yhn", "yho", "yim", "yin", "yio",
                "zgm", "zgn", "zgo", "zhm", "zhn", "zho", "zim", "zin", "zio"});
 }
-
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
