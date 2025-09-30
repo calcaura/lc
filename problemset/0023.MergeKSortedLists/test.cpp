@@ -25,8 +25,3 @@ TEST(TemplateNameTest, ThreeLists) {
   EXPECT_EQ(*result, (ListNode{1, 1, 2, 3, 4, 4, 5, 6}));
   delete result;
 }
-
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

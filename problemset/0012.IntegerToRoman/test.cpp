@@ -20,8 +20,3 @@ TEST(TemplateNameTest, BasicOperations) {
   EXPECT_EQ(solution.intToRoman(58), "LVIII");
   EXPECT_EQ(solution.intToRoman(1994), "MCMXCIV");
 }
-
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

@@ -23,8 +23,3 @@ TEST(TemplateNameTest, BasicOperations) {
     EXPECT_EQ(*result, ListNode({1, 2, 3, 5, 7, 8, 9}));
   }
 }
-
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
