@@ -1,12 +1,29 @@
 #pragma once
+#include <format>
 #include <initializer_list>
 #include <memory>
+#include <tuple>
 
 namespace lc_libs {
 
 template <typename T>
 struct ListNodeBase {
-  using UniquePtr = std::unique_ptr<ListNodeBase<T>>;
+  using This = ListNodeBase<T>;
+  using ThisPtr = std::add_pointer_t<This>;
+  using UniquePtr = std::unique_ptr<This>;
+
+  /**
+   * A view over a list segment, defined by a start and an end (inclusive).
+   */
+  using View = std::tuple<const This* const, const This* const>;
+
+  /**
+   * A view over a list segment, defined by a start and an end (inclusive) and a
+   * separator. This is typically used for printing purposes.
+   */
+  using ViewSep = std::tuple<const This*, const This*, const char*>;
+
+  const View view() const { return View(this, nullptr); }
 
   T val;
   ListNodeBase* next;
@@ -28,6 +45,41 @@ struct ListNodeBase {
       crt->next = new ListNodeBase(*it);
       crt = crt->next;
     }
+  }
+
+  /**
+   * Advance the pointer by the given number of positions.
+   * If the list ends before reaching the desired position, returns nullptr.
+   */
+  ThisPtr advance(std::size_t positions) {
+    ThisPtr l{this};
+    while (l && positions > 0) {
+      l = l->next;
+      --positions;
+    }
+    return l;
+  }
+
+  // Reverse: head -> L1 -> L2 -> L3 -> ... Ln -> tail
+  //      To: head -> Ln -> Ln-1 -> ... L2 -> L1 -> tail
+  static ThisPtr reverse(ThisPtr head, ThisPtr tail) {
+    if (head->next == tail) {
+      return head;
+    }
+
+    ThisPtr prev{head};
+    for (auto it = head->next; it != tail;) {
+      auto next = it->next;
+      it->next = prev;
+      prev = it;
+      it = next;
+    }
+    // Now prev points to Ln and head->next points to L1
+    auto l1 = head->next;
+    head->next = prev;
+    l1->next = tail;
+
+    return l1;
   }
 
   /**
@@ -108,24 +160,140 @@ struct ListNodeBase {
     return head.unlink();
   }
 };
+
 }  // namespace lc_libs
 
 #if __has_include(<iostream>)
 #include <iostream>
 namespace lc_libs {
+
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const ListNodeBase<T>& node) {
   const ListNodeBase<T>* crt = &node;
   os << "[";
   while (crt) {
-    os << crt->val;  // print the value
+    os << crt->val;
     crt = crt->next;
-    if (crt) {
-      os << ", ";  // print arrow if there is a next node
-    }
+    if (crt) os << ", ";
   }
   os << "]";
   return os;
 }
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os,
+                         const typename ListNodeBase<T>::ViewSep& view) {
+  bool add_separator = false;
+  auto start = std::get<0>(view);
+  auto end = std::get<1>(view);
+  const char* sep = std::get<2>(view);
+
+  for (auto it = start; it; it = it->next) {
+    if (add_separator) os << sep;  // <-- removed () from sep
+    os << it->val;
+    add_separator = true;
+    if (it == end) break;
+  }
+  return os;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os,
+                         const typename ListNodeBase<T>::View& view) {
+  // View is a 2-tuple (start, end) — delegate to ViewSep with ", "
+  return os << typename ListNodeBase<T>::ViewSep{std::get<0>(view),
+                                                 std::get<1>(view), ", "};
+}
+
 }  // namespace lc_libs
 #endif  // __has_include(<iostream>)
+
+#if __has_include(<format>)
+#include <format>
+#include <tuple>
+
+namespace std {
+
+template <typename T>
+using lc_lnv = typename ::lc_libs::ListNodeBase<T>::View;
+
+template <typename T>
+using lc_lnv_sep = typename ::lc_libs::ListNodeBase<T>::ViewSep;
+
+// Formatter for 3-tuple: (ListNodeBase<T>*, ListNodeBase<T>*, const char*)
+template <typename T, typename CharT>
+struct std::formatter<
+    std::tuple<const ::lc_libs::ListNodeBase<T>* const,
+               const ::lc_libs::ListNodeBase<T>* const, const char*>,
+    CharT> : std::formatter<std::basic_string<CharT>, CharT> {
+  constexpr auto parse(std::basic_format_parse_context<CharT>& ctx)
+      -> decltype(ctx.begin()) {
+    return ctx.begin();
+  }
+
+  template <typename FormatContext>
+  auto format(
+      const std::tuple<const ::lc_libs::ListNodeBase<T>*,
+                       const ::lc_libs::ListNodeBase<T>*, const char*>& view,
+      FormatContext& ctx) -> decltype(ctx.out()) {
+    auto start = std::get<0>(view);
+    auto end = std::get<1>(view);
+    const char* sep = std::get<2>(view);
+
+    auto out = ctx.out();
+    bool first = true;
+    for (auto it = start; it; it = it->next) {
+      if (!first) {
+        out = std::format_to(out, "{}", sep);
+      }
+      out = std::format_to(out, "{}", it->val);
+      first = false;
+      if (it == end) break;
+    }
+    return out;
+  }
+};
+
+// Formatter for 2-tuple View (start, end) -> delegate to 3-tuple with ", "
+template <typename T, typename CharT>
+struct std::formatter<std::tuple<const ::lc_libs::ListNodeBase<T>*,
+                                 const ::lc_libs::ListNodeBase<T>*>&&,
+                      CharT> : std::formatter<std::basic_string<CharT>, CharT> {
+  constexpr auto parse(std::basic_format_parse_context<CharT>& ctx)
+      -> decltype(ctx.begin()) {
+    return ctx.begin();
+  }
+
+  template <typename FormatContext>
+  auto format(const std::tuple<const ::lc_libs::ListNodeBase<T>*,
+                               const ::lc_libs::ListNodeBase<T>*>&& view,
+              FormatContext& ctx) -> decltype(ctx.out()) {
+    // extract start/end using std::get
+    auto start = std::get<0>(view);
+    auto end = std::get<1>(view);
+    // delegate to the 3-tuple formatter (use ", " as separator)
+    auto sepView = std::make_tuple(start, end, ", ");
+    return std::formatter<decltype(sepView), CharT>{}.format(sepView, ctx);
+  }
+};
+
+template <typename T, typename CharT>
+struct std::formatter<::lc_libs::ListNodeBase<T>*, CharT>
+    : std::formatter<std::basic_string<CharT>, CharT> {
+  constexpr auto parse(std::basic_format_parse_context<CharT>& ctx)
+      -> decltype(ctx.begin()) {
+    return ctx.begin();
+  }
+
+  template <typename FormatContext>
+  auto format(const ::lc_libs::ListNodeBase<T>* const& node, FormatContext& ctx)
+      -> decltype(ctx.out()) {
+    // delegate to the 3-tuple formatter (use ", " as separator)
+    auto sepView = std::make_tuple(
+        node, static_cast<const ::lc_libs::ListNodeBase<T>*>(nullptr), ", ");
+    return std::formatter<decltype(sepView), CharT>{}.format(sepView, ctx);
+  }
+};
+
+}  // namespace std
+#endif  // __has_include(<format>)
