@@ -235,7 +235,7 @@ struct std::formatter<
   auto format(
       const std::tuple<const ::lc_libs::ListNodeBase<T>*,
                        const ::lc_libs::ListNodeBase<T>*, const char*>& view,
-      FormatContext& ctx) -> decltype(ctx.out()) {
+      FormatContext& ctx) -> decltype(ctx.out()) const {
     auto start = std::get<0>(view);
     auto end = std::get<1>(view);
     const char* sep = std::get<2>(view);
@@ -267,7 +267,7 @@ struct std::formatter<std::tuple<const ::lc_libs::ListNodeBase<T>*,
   template <typename FormatContext>
   auto format(const std::tuple<const ::lc_libs::ListNodeBase<T>*,
                                const ::lc_libs::ListNodeBase<T>*>&& view,
-              FormatContext& ctx) -> decltype(ctx.out()) {
+              FormatContext& ctx) -> decltype(ctx.out()) const {
     // extract start/end using std::get
     auto start = std::get<0>(view);
     auto end = std::get<1>(view);
@@ -287,7 +287,7 @@ struct std::formatter<::lc_libs::ListNodeBase<T>*, CharT>
 
   template <typename FormatContext>
   auto format(const ::lc_libs::ListNodeBase<T>* const& node, FormatContext& ctx)
-      -> decltype(ctx.out()) {
+      -> decltype(ctx.out()) const {
     // delegate to the 3-tuple formatter (use ", " as separator)
     auto sepView = std::make_tuple(
         node, static_cast<const ::lc_libs::ListNodeBase<T>*>(nullptr), ", ");
