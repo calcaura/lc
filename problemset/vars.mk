@@ -31,7 +31,7 @@ prep:
 	mkdir -p $(OUTPUT_FOLDER)
 
 test: build
-	$(OUTPUT_BIN)
+	ASAN_OPTIONS=detect_leaks=1 $(OUTPUT_BIN)
 
 clean:
 	rm -rf $(OUTPUT_FOLDER)
