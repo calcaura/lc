@@ -135,11 +135,12 @@ class List {
 
   void push_front(Node* node) {
     ++_size;
-    if (empty()) {
+    if (_head == nullptr) {
       _head = _tail = node;
       return;
     }
     node->next = _head;
+    _head->prev = node;
     _head = node;
   }
 
@@ -153,6 +154,14 @@ class List {
 
   bool empty() const { return _size == 0; }
   size_t size() const { return _size; }
+
+  [[nodiscard]] Node* pop_back() {
+    auto result = _tail;
+    if (result) {
+      erase(result);
+    }
+    return result;
+  }
 
   /**
    * Remove the node from the list
@@ -230,9 +239,27 @@ class List {
     if (node->next) {
       node->next->prev = node->prev;
     }
+
     node->next = _head;
     node->prev = nullptr;
+    _head->prev = node;
     _head = node;
+  }
+
+  Node* get_cycle() const {
+    if (_head == nullptr) {
+      return nullptr;
+    }
+    Node* slow = _head;
+    Node* fast = _head;
+    while (fast && fast->next) {
+      slow = slow->next;
+      fast = fast->next->next;
+      if (slow == fast) {
+        return slow;
+      }
+    }
+    return nullptr;
   }
 
  private:
