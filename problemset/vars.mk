@@ -1,5 +1,5 @@
 WORKSPACE_BUILD_ROOT ?= /tmp
-CXX_FLAGS_EXTRA ?= -g -O0 -fsanitize=address -fsanitize=undefined
+CXX_FLAGS_EXTRA ?= -g -O0 -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer
 
 # Compiler and flags
 CXX=clang++

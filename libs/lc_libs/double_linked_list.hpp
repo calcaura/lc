@@ -98,8 +98,8 @@ class List {
 
   List() = default;
   List(const List&) = delete;
-  List(std::initializer_list<T> values) {
-    if (values.size() == 0) {
+  List(std::initializer_list<T> values) : _size(values.size()) {
+    if (_size == 0) {
       return;
     }
     auto it = values.begin();
@@ -118,6 +118,8 @@ class List {
   List& operator=(const List&) = delete;
 
   void push_back(T value) {
+    ++_size;
+
     Node* node = new Node(value, nullptr, nullptr);
     if (_tail == nullptr) {
       _head = _tail = node;
@@ -132,6 +134,7 @@ class List {
   }
 
   void push_front(Node* node) {
+    ++_size;
     if (empty()) {
       _head = _tail = node;
       return;
@@ -140,7 +143,7 @@ class List {
     _head = node;
   }
 
-  void push_front(T value) { push_front(new Node(value)); }
+  void push_front_value(T value) { push_front(new Node(value)); }
 
   Node* back() { return _tail; }
   const Node* back() const { return _tail; }
@@ -148,7 +151,8 @@ class List {
   Node* front() { return _head; }
   const Node* front() const { return _head; }
 
-  bool empty() const { return _head == nullptr; }
+  bool empty() const { return _size == 0; }
+  size_t size() const { return _size; }
 
   /**
    * Remove the node from the list
@@ -161,6 +165,7 @@ class List {
       _head = _head->next;
     }
     node->unlink();
+    --_size;
   }
 
   const DListView<T> view(const char* sep = ",") const {
@@ -208,9 +213,32 @@ class List {
     return crt;
   }
 
+  /**
+   * Move a node to the head of the list
+   */
+  void relocate_front(Node* node) {
+    if (node == _head) {
+      return;  // no-op
+    }
+
+    if (node == _tail) {
+      _tail = _tail->prev;
+    }
+    if (node->prev) {
+      node->prev->next = node->next;
+    }
+    if (node->next) {
+      node->next->prev = node->prev;
+    }
+    node->next = _head;
+    node->prev = nullptr;
+    _head = node;
+  }
+
  private:
   Node* _head{};
   Node* _tail{};
+  size_t _size{};
 };
 
 }  // namespace lc_libs

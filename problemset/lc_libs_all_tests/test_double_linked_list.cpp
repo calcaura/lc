@@ -81,9 +81,12 @@ TEST(DoubleLinkedList, Format) {
 TEST(DoubleLinkedList, push_back) {
   List list{7, 9, 42};
   ASSERT_EQ(list, (std::initializer_list<int>{7, 9, 42}));
+  ASSERT_EQ(list.size(), 3);
+  ASSERT_FALSE(list.empty());
 
   list.push_back(73);
   ASSERT_EQ(list, (std::initializer_list<int>{7, 9, 42, 73}));
+  ASSERT_EQ(list.size(), 4);
 
   ASSERT_EQ(list.at(1)->val, 9);
   ASSERT_EQ(list.at(3)->val, 73);
@@ -93,9 +96,11 @@ TEST(DoubleLinkedList, push_back) {
 TEST(DoubleLinkedList, push_front) {
   List list{7, 9, 42};
   ASSERT_EQ(list, (std::initializer_list<int>{7, 9, 42}));
+  ASSERT_EQ(list.size(), 3);
 
-  list.push_front(73);
+  list.push_front_value(73);
   ASSERT_EQ(list, (std::initializer_list<int>{73, 7, 9, 42}));
+  ASSERT_EQ(list.size(), 4);
 
   ASSERT_EQ(list.at(0)->val, 73);
   ASSERT_EQ(list.at(1)->val, 7);
@@ -107,12 +112,36 @@ TEST(DoubleLinkedList, erase) {
   List list{7, 9, 42};
   ASSERT_EQ(list, (std::initializer_list<int>{7, 9, 42}));
   ASSERT_EQ(std::format("{}", list), "7, 9, 42");
+  ASSERT_EQ(list.size(), 3);
 
   auto rm = list.back();
   ASSERT_EQ(rm->val, 42);
   ASSERT_EQ(list, (std::initializer_list<int>{7, 9, 42}));
+  // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
   list.erase(rm);
+  ASSERT_EQ(list.size(), 2);
   list.push_front(rm);
+  // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
+  ASSERT_EQ(list.size(), 3);
   ASSERT_EQ(list, (std::initializer_list<int>{42, 7, 9}));
   ASSERT_EQ(std::format("{}", list), "42, 7, 9");
+}
+
+TEST(DoubleLinkedList, relocate_front) {
+  List list{7, 9, 42, 73, 91};
+  ASSERT_EQ(list, (std::initializer_list<int>{7, 9, 42, 73, 91}));
+  ASSERT_EQ(std::format("{}", list), "7, 9, 42, 73, 91");
+  ASSERT_EQ(list.size(), 5);
+
+  list.relocate_front(list.at(2));
+  ASSERT_EQ(list, (std::initializer_list<int>{42, 7, 9, 73, 91}));
+
+  list.relocate_front(list.at(0));
+  ASSERT_EQ(list, (std::initializer_list<int>{42, 7, 9, 73, 91}));
+
+  list.relocate_front(list.at(4));
+  ASSERT_EQ(list, (std::initializer_list<int>{91, 42, 7, 9, 73}));
+
+  list.relocate_front(list.at(0));
+  ASSERT_EQ(list, (std::initializer_list<int>{91, 42, 7, 9, 73}));
 }
