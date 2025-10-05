@@ -17,15 +17,20 @@ OUTPUT_BIN=$(OUTPUT_FOLDER)/bin
 # Source files
 FILE_LIST=$(wildcard *.cpp)
 OBJ_FILES := $(patsubst %.cpp,$(OUTPUT_FOLDER)/%.o,$(FILE_LIST))
+TIDY_FILES := $(patsubst %.cpp,$(OUTPUT_FOLDER)/%.tidy,$(FILE_LIST))
 
+$(OUTPUT_FOLDER)/%.tidy: %.cpp | prep
+	$(TIDY) $< -- $(CXX_FLAGS)
+	@echo tidy > $@
 
 $(OUTPUT_FOLDER)/%.o: %.cpp | prep
-	$(TIDY) $< -- $(CXX_FLAGS)
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
-build: prep $(OBJ_FILES)
+build: $(TIDY_FILES) $(OBJ_FILES) 
 	$(CXX) $(CXX_FLAGS) -o $(OUTPUT_BIN) $(OBJ_FILES) $(CXX_LIBS) $(CXX_LIBS_TEST)
 
+tidy: $(TIDY_FILES)
+	@true
 
 prep:
 	mkdir -p $(OUTPUT_FOLDER)
@@ -36,5 +41,5 @@ test: build
 clean:
 	rm -rf $(OUTPUT_FOLDER)
 
-.PHONY: build prep test clean
+.PHONY: build prep test clean tidy
 .DEFAULT_GOAL := test
