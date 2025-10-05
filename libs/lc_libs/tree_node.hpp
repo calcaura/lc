@@ -2,7 +2,7 @@
 #include <any>
 #include <format>
 #include <initializer_list>
-#include <iostream>
+#include <iterator>
 #include <memory>
 #include <queue>
 #include <span>
@@ -16,14 +16,24 @@ struct TreeNodeBase;
 
 template <typename T>
 struct DfsView {
-  const TreeNodeBase<T>* const node;
-  DfsView(const TreeNodeBase<T>* const n) : node(n) {}
+  using Node = TreeNodeBase<T>;
+  using Iterator = typename Node::DfsIterator;
+  Node* node;
+  DfsView(Node* n) : node(n) {}
+
+  Iterator begin() const { return Iterator(node); }
+  Iterator end() const { return Iterator(); }
 };
 
 template <typename T>
 struct BfsView {
-  const TreeNodeBase<T>* node;
-  BfsView(const TreeNodeBase<T>* n) : node(n) {}
+  using Node = TreeNodeBase<T>;
+  using Iterator = typename Node::BfsIterator;
+  Node* node;
+  BfsView(Node* n) : node(n) {}
+
+  Iterator begin() { return Iterator(node); }
+  Iterator end() { return Iterator(); }
 };
 
 template <typename T>
@@ -108,104 +118,121 @@ struct TreeNodeBase {
     }
   }
 
-  DfsView<T> dfs() const { return DfsView<T>(this); }
-  BfsView<T> bfs() const { return BfsView<T>(this); }
+  DfsView<T> dfs_view() { return {this}; }
+  BfsView<T> bfs_view() { return {this}; }
 
-  static void print_dfs(std::ostream& os, const TreeNodeBase<T>* const root) {
-    if (!root) {
-      os << "null";
-      return;
-    }
-    os << root->val;
-    if (!root->left && !root->right) {
-      os << ",null,null";
-      return;
-    }
-    if (root->left || root->right) {
-      os << ",{";
-      print_dfs(os, root->left);
-      os << ",";
-      print_dfs(os, root->right);
-      os << "}";
-    }
-  }
+  bool no_children() const { return left == nullptr && right == nullptr; }
 
-  template <typename FormatContext>
-  static auto print_dfs(FormatContext& ctx, const TreeNodeBase<T>* const root)
-      -> typename FormatContext::iterator {
-    if (!root) {
-      return std::format_to(ctx.out(), "null");
-    }
-    auto it = std::format_to(ctx.out(), "{}", root->val);
-    if (!root->left && !root->right) {
-      it = std::format_to(it, ",null,null");
-      return it;
-    }
-    if (root->left || root->right) {
-      // When using std::format_to, '{{' -> literal '{' and '}}' -> literal '}'.
-      it = std::format_to(it, ",{{");
-      it = print_dfs(ctx, root->left);
-      it = std::format_to(it, ",");
-      it = print_dfs(ctx, root->right);
-      it = std::format_to(it, "}}");
-    }
-    return it;
-  }
+  class DfsIterator {
+   public:
+    using difference_type = std::ptrdiff_t;
+    using value_type = T;
 
-  // Improved BFS printer: stop after last meaningful level
-  static void print_bfs(std::ostream& os, const TreeNodeBase<T>* const root) {
-    if (!root) {
-      os << "null";
-      return;
+    DfsIterator() = default;
+    DfsIterator(TreeNodeBase* root) { push_children(root); }
+
+    DfsIterator operator++(int) {
+      auto result = *this;
+      ++*this;
+      return result;
     }
-    std::vector<const TreeNodeBase<T>*> current{root};
-    while (!current.empty()) {
-      // print current level
-      bool any_non_null = false;
-      for (const auto* n : current) {
-        if (n) {
-          os << n->val << " ";
-          any_non_null = true;
-        } else {
-          os << "null ";
-        }
+
+    DfsIterator& operator++() {
+      if (_queue.empty()) {
+        // no-op
+        return *this;
       }
-      os << "\n";
-      if (!any_non_null) break;
-
-      // build next level
-      std::vector<const TreeNodeBase<T>*> next;
-      next.reserve(current.size() * 2);
-      for (const auto* n : current) {
-        if (n) {
-          next.push_back(n->left);
-          next.push_back(n->right);
-        } else {
-          // keep placeholders so positions remain aligned
-          next.push_back(nullptr);
-          next.push_back(nullptr);
-        }
+      auto n = _queue.front();
+      _queue.pop_front();
+      if (!n->right) {
+        return *this;
       }
-
-      // Trim trailing nulls in `next` to avoid infinite expansion:
-      while (!next.empty() && next.back() == nullptr) next.pop_back();
-      current.swap(next);
+      if (_queue.empty()) {
+        push_children(n->right);
+      } else {
+        auto head = _queue.front();
+        _queue.pop_front();
+        push_children(n->right);
+        _queue.push_front(head);
+      }
+      return *this;
     }
-  }
+
+    operator T() const { return _queue.front()->val; }
+    operator T&() const { return _queue.front()->val; }
+    operator T&() { return _queue.front()->val; }
+
+    T operator*() const { return _queue.front()->val; }
+
+    bool operator==(const DfsIterator& o) const {
+      if (_queue.empty()) {
+        return o._queue.empty();
+      } else if (o._queue.empty()) {
+        return false;
+      }
+      return _queue.front() == o._queue.front();
+    }
+
+   private:
+    std::deque<TreeNodeBase*> _queue;
+    void push_children(TreeNodeBase* node) {
+      while (node) {
+        _queue.push_front(node);
+        node = node->left;
+      }
+    }
+  };
+  static_assert(std::forward_iterator<DfsIterator>);
+
+  class BfsIterator {
+   public:
+    using difference_type = std::ptrdiff_t;
+    using value_type = T;
+
+    BfsIterator() = default;
+    BfsIterator(TreeNodeBase* root) { _queue.push_front(root); }
+
+    BfsIterator operator++(int) {
+      auto result = *this;
+      ++*this;
+      return result;
+    }
+
+    BfsIterator& operator++() {
+      if (_queue.empty()) {
+        // no-op
+        return *this;
+      }
+      auto n = _queue.front();
+      _queue.pop_front();
+      if (n->left) {
+        _queue.push_back(n->left);
+      }
+      if (n->right) {
+        _queue.push_back(n->right);
+      }
+      return *this;
+    }
+
+    operator T() const { return _queue.front()->val; }
+    operator T&() const { return _queue.front()->val; }
+    operator T&() { return _queue.front()->val; }
+
+    T operator*() const { return _queue.front()->val; }
+
+    bool operator==(const BfsIterator& o) const {
+      if (_queue.empty()) {
+        return o._queue.empty();
+      } else if (o._queue.empty()) {
+        return false;
+      }
+      return _queue.front()->val == o._queue.front()->val;
+    }
+
+   private:
+    std::deque<TreeNodeBase*> _queue;
+  };
+  static_assert(std::forward_iterator<BfsIterator>);
 };
 
 }  // namespace lc_libs
-
-template <typename T>
-std::ostream& operator<<(std::ostream& os,
-                         const typename ::lc_libs::DfsView<T>& view) {
-  ::lc_libs::TreeNodeBase<T>::print_dfs(os, view.node);
-  return os;
-}
-
-template <typename T>
-std::ostream& operator<<(std::ostream& os,
-                         const typename ::lc_libs::BfsView<T>& view) {
-  ::lc_libs::TreeNodeBase<T>::print_bfs(os, view.node);
-  return os;
-}
