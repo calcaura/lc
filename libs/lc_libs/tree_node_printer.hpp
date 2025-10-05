@@ -1,6 +1,7 @@
 #pragma once
 
 #include <format>
+#include <iostream>
 
 #include "tree_node.hpp"
 
@@ -22,8 +23,45 @@ struct formatter<::lc_libs::DfsView<T>, CharT> {
   template <typename FormatContext>
   auto format(const ::lc_libs::DfsView<T>& view, FormatContext& ctx) const
       -> decltype(ctx.out()) {
-    return ::lc_libs::TreeNodeBase<T>::print_dfs(ctx, view.node);
+    bool comma{};
+    auto result = ctx.out();
+    for (auto it : view) {
+      if (comma) {
+        result = std::format_to(result, ", ");
+      }
+      comma = true;
+      result = std::format_to(result, "{}", it);
+    }
+    return result;
   }
 };
 
 }  // namespace std
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os,
+                         const typename ::lc_libs::DfsView<T>& view) {
+  bool comma{};
+  for (auto it : view) {
+    if (comma) {
+      os << ", ";
+    }
+    comma = true;
+    os << it;
+  }
+  return os;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os,
+                         const typename ::lc_libs::BfsView<T>& view) {
+  bool comma{};
+  for (auto it : view) {
+    if (comma) {
+      os << ", ";
+    }
+    comma = true;
+    os << it;
+  }
+  return os;
+}

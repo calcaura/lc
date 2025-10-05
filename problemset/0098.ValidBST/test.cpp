@@ -22,8 +22,7 @@ TEST(ValidBST, BasicOperations) {
   EXPECT_TRUE(sol.isValidBST(&root));
 
   TreeNode root2{5, {1, 4, nullptr, nullptr, 3, 6}};
-  EXPECT_EQ(std::format("\n{}", root2.dfs()),
-            "\n5,{1,null,null,4,{3,null,null,6,null,null}}");
+  EXPECT_EQ(std::format("{}", root2.dfs_view()), "1, 5, 3, 4, 6");
 
   EXPECT_FALSE(sol.isValidBST(&root2));
 
