@@ -233,6 +233,14 @@ struct TreeNodeBase {
     std::deque<TreeNodeBase*> _queue;
   };
   static_assert(std::forward_iterator<BfsIterator>);
+
+  size_t height() const { return height(this); }
+
+  static size_t height(const TreeNodeBase* node) {
+    if (node == nullptr) return 0;
+
+    return 1 + std::max(height(node->left), height(node->right));
+  }
 };
 
 }  // namespace lc_libs

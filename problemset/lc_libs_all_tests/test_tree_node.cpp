@@ -27,6 +27,8 @@ TEST(TreeNodeTest, BasicOperations) {
   ASSERT_TRUE(root.right->left->no_children());
   ASSERT_EQ(root.right->left->left, nullptr);
 
+  ASSERT_EQ(root.height(), 4);
+
   {
     auto view = root.dfs_view();
     std::vector<int> ser(view.begin(), view.end());
