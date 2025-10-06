@@ -42,7 +42,7 @@ ENV EDITOR=vim
 ENV LC_TOOLS=/opt/lc
 RUN mkdir -p ${LC_TOOLS}
 ADD .devcontainer/artifacts ${LC_TOOLS}
-
+RUN cat ${LC_TOOLS}/bashrc_ext.sh >> /etc/bash.bashrc
 
 ## Add the current user mapped to the ids of the local git repository user
 RUN userdel -fr ubuntu || true
