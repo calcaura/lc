@@ -52,4 +52,7 @@ git checkout -b ${PROJECT_GIT_BRANCH} || exit 1
 log_debug "Adding files"
 git add ${PROJECT_NAME} || exit 1
 
+log_debug "Initial commit"
+GIT_EDITOR=true git commit -m "$PROJECT_TITLE"
+
 log_info "✅ Project ready: $PROJECT_NAME"
