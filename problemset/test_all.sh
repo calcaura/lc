@@ -1,37 +1,10 @@
 #!/bin/bash
 cd "$(dirname "$0")" || exit 1
+source ../libs/bash/console.sh || exit 2
+
 DIRS=$(find -name 'Makefile' | grep -v _template | xargs dirname | sort -u)
 TMP_DIR=$(mktemp -d)
 
-__date() {
-  date +'%Y-%m-%dT%H:%M:%S%z'
-}
-
-log() {
-  printf "\e[32m[%s]: %s\e[0m\n" "$(__date)" "$1"
-}
-
-info() {
-  printf "\e[33m[%s]: %s\e[0m\n" "$(__date)" "$1"
-}
-
-
-error() {
-  >&2 printf "\e[31m[%s]: %s\e[0m\n" "$(__date)" "$1"
-  false
-}
-
-clear_line() {
-  # terminfo clr_eol
-  ceol=$(tput el)
-  echo -ne "\r${ceol}\033[2K"
-}
-
-
-die_with() {
-  error "$1"
-  exit 1
-}
 
 function build_single() {
     local dir="$1"
@@ -42,7 +15,7 @@ function build_single() {
     local OUTPUT=${TMP_DIR}/${name}.out
     local ERR=${TMP_DIR}/${name}.err
 
-    info ">>> Begin $cmd ${name}"
+    log_info ">>> Begin $cmd ${name}"
     
     echo "::group::$title ($dir)" > ${OUTPUT}
     make -C "$dir" $cmd >> ${OUTPUT} 2> ${ERR}
@@ -54,7 +27,7 @@ function build_single() {
       echo "::error::${title} ($dir)::" >> ${OUTPUT} 2>&1
     fi
 
-    info "<<<   End $cmd ${name}"
+    log_info "<<<   End $cmd ${name}"
     
 }
 N=$(cat /proc/cpuinfo | grep processor | wc -l)   # max parallel jobs
@@ -79,7 +52,7 @@ check_queue() {
 
 run_make_target() {
   local target=$1
-  log "Running target $target"
+  log_debug "Running target $target"
   for dir in $DIRS; do
       check_queue
       while [ "${#queue[@]}" -ge "$N" ]; do
@@ -95,11 +68,11 @@ run_make_target() {
   # check for errors
   errors_out=$(cat ${TMP_DIR}/*.err)
   if [ ! -z "${errors_out}" ]; then
-    error "While executing target $target"
-fi
+    log_error "While executing target $target"
+  fi
 }
 
-log "Output under ${TMP_DIR}"
+log_debug "Output under ${TMP_DIR}"
 
 # Starting all tests
 export CXX_FLAGS_EXTRA="-g -O0 -fsanitize=address -fsanitize=undefined"
@@ -108,7 +81,7 @@ for target in tidy build test; do
   run_make_target $target || break
 done
 
-log "All tests done"
+log_debug "All tests done"
 
 errors_out=$(cat ${TMP_DIR}/*.err)
 if [ ! -z "${errors_out}" ]; then
