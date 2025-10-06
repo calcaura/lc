@@ -48,3 +48,15 @@ git-restack() {
 
     [ "$crt_branch" == "main" ] || git checkout $crt_branch
 }
+
+git-gc() {
+  log_debug "Garbage collect: removing all local branches that don't have an associated remote"
+  git fetch --prune
+  git for-each-ref --format='%(refname:short) %(objectname:short)' refs/heads | while read branch hash; do
+      upstream=$(git rev-parse --abbrev-ref --symbolic-full-name "${branch}@{u}" 2>/dev/null)
+      if [ $? -ne 0 ]; then
+          log_info "❌ Deleting: $branch ($hash)"
+          git b -D $branch
+      fi
+  done
+}
