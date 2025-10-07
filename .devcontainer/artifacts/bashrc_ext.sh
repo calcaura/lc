@@ -46,7 +46,8 @@ git-restack() {
       log_info "✅ Branch $branch restacked"
     done
 
-    [ "$crt_branch" == "main" ] || git checkout $crt_branch
+    log_info "Restacking done"
+    git checkout $crt_branch
 }
 
 git-gc() {
