@@ -18,7 +18,7 @@ jobs:
   build-env:
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/calcaura/calcaura-lc-build-env:1.0.0
+      image: ghcr.io/calcaura/calcaura-lc-build-env:1.0.1
 
     steps:
       - uses: actions/checkout@v4
