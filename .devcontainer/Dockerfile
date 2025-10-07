@@ -15,7 +15,8 @@ RUN apt-get update && apt-get install -y \
     git \
     sudo \
     vim \
-    libgtest-dev
+    libgtest-dev \
+    man-db manpages manpages-posix manpages-dev
 
 # Build GTest
 RUN cd /usr/src/gtest && \
@@ -50,3 +51,9 @@ RUN groupadd --gid ${REMOTE_GID} ${REMOTE_USER} || true
 RUN useradd -m --uid ${REMOTE_UID} --gid ${REMOTE_GID} ${REMOTE_USER} -s /bin/bash
 RUN usermod -a -G sudo ${REMOTE_USER}
 RUN passwd -d ${REMOTE_USER}
+
+# Uniminimize in order to get all manpages
+RUN yes | unminimize
+
+# Cleanup the container
+RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
