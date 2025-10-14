@@ -23,7 +23,7 @@ parse_title() {
   [ -z "$num" ] && usage "Name expected to start with a number"
   [ -z "$rest" ] && usage "The remaining of the title exepcted to be non empty"
 
-  local proj_name="${test// /}"
+  local proj_name="${rest// /}"
   local proj_name="${proj_name//[()]/_}"
 
   export PROJECT_NUMBER=$(printf "%04d" "$num")

@@ -84,6 +84,7 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "chrono": "cpp",
-        "cstring": "cpp"
+        "cstring": "cpp",
+        "bitset": "cpp"
     }
 }
