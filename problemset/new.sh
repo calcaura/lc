@@ -23,8 +23,11 @@ parse_title() {
   [ -z "$num" ] && usage "Name expected to start with a number"
   [ -z "$rest" ] && usage "The remaining of the title exepcted to be non empty"
 
+  local proj_name="${test// /}"
+  local proj_name="${proj_name//[()]/_}"
+
   export PROJECT_NUMBER=$(printf "%04d" "$num")
-  export PROJECT_NAME="${PROJECT_NUMBER}."$(echo "$rest" | tr -d ' ')
+  export PROJECT_NAME="${PROJECT_NUMBER}.${proj_name}"
   export PROJECT_TITLE=$rest
   export PROJECT_TC_TITLE=$(echo "$rest" | tr -d ' ')
   export PROJECT_GIT_BRANCH="$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]')"
