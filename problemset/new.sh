@@ -6,17 +6,24 @@ usage() {
   [ -z "$1" ] || log_error $1
 
   die_with "Usage:
-  ./new.sh xx. Title bla
-  
-Example:
-  ./new.sh 61. Rotate List
+  ./new.sh xx. <title> [source]
 
-Note: The title should be obtained by simply right-click+copy on the title in leetcode
+  Where:
+    xx is the problem number, e.g. 61
+    <title> is the problem title, e.g. Rotate List
+    [source] is an optional argument to specify the source of the problem, e.g. leetcode, hackerrank, etc. Default is leetcode.
+  
+  Example:
+    ./new.sh "61. Rotate List"
+
+  Note: The title should be obtained by simply right-click+copy on the title in leetcode.
   "
 }
 
 parse_title() {
-  local input="$@"
+  local input="$1"
+  local source="${2:-leetcode}"
+
   [[ $input =~ ^([0-9]+)\.\ (.*)$ ]] || usage
   local num="${BASH_REMATCH[1]}"
   local rest="${BASH_REMATCH[2]}"
@@ -31,23 +38,22 @@ parse_title() {
   export PROJECT_TITLE=$rest
   export PROJECT_TC_TITLE=$(echo "$rest" | tr -d ' ')
   export PROJECT_GIT_BRANCH="$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]')"
-
-  
+  export PROJECT_DIR="${source}/${PROJECT_NAME}"
 }
 
-parse_title "$@"
+parse_title "$1" $2 || exit 1
 
 [ -d $PROJECT_NAME ] && die_with "Project already exists: $PROJECT_NAME"
 git show-ref --verify --quiet "refs/heads/$PROJECT_GIT_BRANCH" && die_with "Git branch already exists: ${PROJECT_GIT_BRANCH}"
 
-log_debug "Copying the template into $PROJECT_NAME"
-cp -r _template "$PROJECT_NAME"  || exit 1
+log_debug "Copying the template into $PROJECT_DIR"
+cp -r common/_template "$PROJECT_DIR"  || exit 1
 
 log_debug "Updating the title in README.md"
-echo "# ${PROJECT_TITLE}" >> "$PROJECT_NAME/README.md"  || exit 1
+echo "# ${PROJECT_TITLE}" >> "$PROJECT_DIR/README.md"  || exit 1
 
 log_debug "Updating test case"
-sed -i s/TemplateNameTest/${PROJECT_TC_TITLE}/g "$PROJECT_NAME/test.cpp"  || exit 1
+sed -i s/TemplateNameTest/${PROJECT_TC_TITLE}/g "$PROJECT_DIR/test.cpp"  || exit 1
 
 log_debug "Creating git branch '$PROJECT_GIT_BRANCH'"
 git checkout -b ${PROJECT_GIT_BRANCH} || exit 1
