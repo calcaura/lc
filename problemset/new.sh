@@ -24,7 +24,7 @@ parse_title() {
   local input="$1"
   local source="${2:-leetcode}"
 
-  [[ $input =~ ^([0-9]+)\.\ (.*)$ ]] || usage
+  [[ $input =~ ^([0-9]+)\.\ (.*)$ ]] || usage "Invalid title format: '$input'"
   local num="${BASH_REMATCH[1]}"
   local rest="${BASH_REMATCH[2]}"
   [ -z "$num" ] && usage "Name expected to start with a number"
@@ -59,7 +59,7 @@ log_debug "Creating git branch '$PROJECT_GIT_BRANCH'"
 git checkout -b ${PROJECT_GIT_BRANCH} || exit 1
 
 log_debug "Adding files"
-git add ${PROJECT_NAME} || exit 1
+git add ${PROJECT_DIR} || exit 1
 
 log_debug "Initial commit"
 GIT_EDITOR=true git commit -m "$PROJECT_TITLE"
