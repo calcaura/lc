@@ -3,10 +3,27 @@
 #include <chrono>
 #include <cstdlib>  // for std::getenv
 #include <format>
+#include <functional>
 #include <iostream>
+#include <iterator>
 #include <string>
 #include <thirdParty/rang.hpp>
 #include <utility>
+
+#ifdef SANE
+#define DIE_IF(cond, fmt, ...)                              \
+  ({                                                        \
+    if (cond) {                                             \
+      std::cerr << __FILE__ << ": " << __LINE__ << " "      \
+                << std::format(fmt, ##__VA_ARGS__) << "\n"; \
+      exit(1);                                              \
+    }                                                       \
+  })
+#else
+#define DIE_IF(...) \
+  do {              \
+  } while (0)
+#endif
 
 namespace lc_libs::log {
 
