@@ -42,3 +42,8 @@
 
 # build directory
 build/
+
+# MacOS specific files
+.DS_Store
+Thumbs.db
+**/.DS_Store
