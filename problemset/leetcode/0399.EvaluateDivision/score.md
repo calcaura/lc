@@ -1,7 +1,7 @@
 # Submit status
 Once submitted to leetcode, you will get a report. Copy the values here
 
-* **Runtime**: ?ms 
-* **Memory**: ?MB
-* **Beats**: ?%
-* **Complexity**: O(?)
+* **Runtime**: 0ms 
+* **Memory**: 11MB
+* **Beats**: 100%
+* **Complexity**: O(N*M)
