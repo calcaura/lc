@@ -85,6 +85,8 @@
         "cinttypes": "cpp",
         "chrono": "cpp",
         "cstring": "cpp",
-        "bitset": "cpp"
+        "bitset": "cpp",
+        "unordered_set": "cpp",
+        "fstream": "cpp"
     }
 }
