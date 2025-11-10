@@ -11,6 +11,11 @@ class Trie {
  public:
   Trie() : _nodes(1) {}
 
+  /**
+   * Inserts a word into the trie.
+   * All characters are assumed to be 'a' to 'z'.
+   * If characters outside this range are used, the behavior is undefined.
+   */
   void insert(const char* word) {
     size_t in{0};
     for (const char* c = word; *c; ++c) {
@@ -37,10 +42,18 @@ class Trie {
     _nodes[in].is_eow = true;
   }
 
+  /**
+   * Returns true if the word is in the trie.
+   */
   bool search(const char* word) {
     size_t in{0};
     for (const char* c = word; *c; ++c) {
       const uint8_t idx = *c - 'a';
+      // Sanity check
+      if (idx > 'z' - 'a') {
+        return false;
+      }
+
       size_t next = _nodes[in].children[idx];
       if (next == 0) {
         return false;
@@ -53,10 +66,69 @@ class Trie {
     return _nodes[in].is_eow;
   }
 
+  /**
+   * Returns true if the word is in the trie. The word may contain the
+   * wildcard character '.' to represent any one letter.
+   */
+  bool searchWildcard(const char* word, size_t in = 0) {
+    for (const char* c = word; *c; ++c) {
+      if (*c == '.') {
+        // special case, . at the end
+        if (*(c + 1) == 0) {
+          for (auto v : _nodes[in].children) {
+            if (v == kLeafValue) {
+              return true;
+            }
+            if (v != 0 && _nodes[v].is_eow) {
+              return true;
+            }
+          }
+          return false;
+        }  // end of special case, . at the end
+
+        for (auto v : _nodes[in].children) {
+          if (v == kLeafValue) {
+            continue;
+          }
+          if (v != 0 && searchWildcard(c + 1, v)) {
+            return true;
+          }
+        }
+        return false;
+      }  // End of wildcard,
+
+      // Now try normal search
+      const uint8_t idx = *c - 'a';
+      // Sanity check
+      if (idx > 'z' - 'a') {
+        return false;
+      }
+
+      size_t next = _nodes[in].children[idx];
+      if (next == 0) {
+        return false;
+      }
+      if (next == kLeafValue) {
+        return *(c + 1) == 0;
+      }
+      in = next;
+    }
+    return _nodes[in].is_eow;
+  }
+
+  /**
+   * Returns true if there is any word in the trie that starts with the given
+   * prefix.
+   */
   bool startsWith(const char* word) {
     size_t in{0};
     for (const char* c = word; *c; ++c) {
       const uint8_t idx = *c - 'a';
+      // Sanity check
+      if (idx > 'z' - 'a') {
+        return false;
+      }
+
       size_t next = _nodes[in].children[idx];
       if (next == 0) {
         return false;
