@@ -4,7 +4,7 @@
 #include <string>
 
 class WordDictionary {
-  lc_libs::Trie _trie;
+  lc_libs::Trie<uint16_t> _trie;
 
  public:
   WordDictionary() {}

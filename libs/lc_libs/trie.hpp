@@ -1,15 +1,36 @@
 #pragma once
 
+#include <assert.h>
+
 #include <array>
 #include <cstdint>
 #include <limits>
+#include <string>
 #include <vector>
 
 namespace lc_libs {
 
+template <typename T = uint16_t>
 class Trie {
  public:
   Trie() : _nodes(1) {}
+
+  Trie(const Trie&) = delete;
+  Trie& operator=(const Trie&) = delete;
+
+  template <typename Iter>
+  Trie(Iter begin, Iter end) : _nodes(1) {
+    for (auto it = begin; it != end; ++it) {
+      insert(*it);
+    }
+  }
+
+  template <typename Word>
+  Trie(const std::vector<Word>& words) : _nodes(1) {
+    for (const auto& word : words) {
+      insert(word);
+    }
+  }
 
   /**
    * Inserts a word into the trie.
@@ -40,6 +61,15 @@ class Trie {
       in = next;
     }
     _nodes[in].is_eow = true;
+  }
+
+  void insert(const std::string& word) { insert(word.c_str()); }
+
+  template <typename Word>
+  void insert(const std::vector<Word>& words) {
+    for (const auto& word : words) {
+      insert(word);
+    }
   }
 
   /**
@@ -142,20 +172,34 @@ class Trie {
   }
 
  private:
-  constexpr static inline const uint16_t kLeafValue =
-      std::numeric_limits<uint16_t>::max();
+  constexpr static inline const T kLeafValue = std::numeric_limits<T>::max();
 
-  struct alignas(64) Node {
-    std::array<uint16_t, 'z' - 'a' + 1> children{};
+  struct alignas(32) Node {
+    std::array<T, 'z' - 'a' + 1> children{};
     bool is_eow{};
+    bool is_used;
   };
 
   std::vector<Node> _nodes;
+  std::vector<T> _free_nodes;
 
   size_t newNode() {
+    if (!_free_nodes.empty()) {
+      size_t n = _free_nodes.back();
+      _free_nodes.pop_back();
+      return n;
+    }
+
     auto sz = _nodes.size();
+    assert(sz < kLeafValue);
     _nodes.resize(sz + 1);
+    _nodes[sz].is_used = true;
     return sz;
+  }
+
+  void freeNode(size_t n) {
+    _nodes[n].is_used = false;
+    _free_nodes.push_back(n);
   }
 };
 }  // namespace lc_libs
