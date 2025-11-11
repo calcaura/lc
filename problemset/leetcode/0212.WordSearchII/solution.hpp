@@ -9,28 +9,21 @@
 namespace lc_libs {
 
 class Solution {
-  lc_libs::Trie<uint32_t> _trie;
+  lc_libs::Trie<uint16_t> _trie;
   size_t _width, _height;
   size_t _right, _bottom;
-  std::vector<char> _data;
+  std::vector<std::vector<char>>* _data;
   std::string _str;
-  std::unordered_set<std::string> _result;
-  size_t _expected_words_count{};
+  std::vector<std::string> _result;
 
-  void search_board(const std::vector<std::vector<char>>& board) {
+  void search_board(std::vector<std::vector<char>>& board) {
     _width = board[0].size();
     _height = board.size();
 
     _right = _width - 1;
     _bottom = _height - 1;
 
-    _data.resize(_width * _height + 1);
-
-    auto to = _data.begin();
-    for (auto& row : board) {
-      to = std::copy(row.begin(), row.end(), to);
-    }
-    *to = 0;
+    _data = &board;
 
     for (size_t y = 0; y < _height; ++y) {
       for (size_t x = 0; x < _width; ++x) {
@@ -41,8 +34,7 @@ class Solution {
   }
 
   void search_board_from(size_t y, size_t x) {
-    const size_t off = y * _width + x;
-    const char c = _data[off];
+    const char c = (*_data)[y][x];
     if (c == 0) {
       return;
     }
@@ -54,12 +46,10 @@ class Solution {
       return;
     }
     if (_trie.search(_str.c_str())) {
-      _result.insert(_str);
-      if (_result.size() >= _expected_words_count) {
-        return;
-      }
+      _result.push_back(_str);
+      _trie.remove(_str);
     }
-    _data[off] = 0;
+    (*_data)[y][x] = 0;
 
     if (x < _right) {
       search_board_from(y, x + 1);
@@ -76,19 +66,16 @@ class Solution {
     }
 
     _str.pop_back();
-    _data[off] = c;
+    (*_data)[y][x] = c;
   }
 
  public:
-  std::vector<std::string> findWords(
-      const std::vector<std::vector<char>>& board,
-      const std::vector<std::string>& words) {
-    _expected_words_count = words.size();
+  std::vector<std::string> findWords(std::vector<std::vector<char>>& board,
+                                     const std::vector<std::string>& words) {
     _trie.insert(words);
+    _result.reserve(words.size());
     search_board(board);
-
-    std::vector<std::string> result(_result.begin(), _result.end());
-    return result;
+    return _result;
   }
 };
 }  // namespace lc_libs
