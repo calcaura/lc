@@ -29,6 +29,9 @@ $(OUTPUT_FOLDER)/%.o: %.cpp | prep
 build: $(TIDY_FILES) $(OBJ_FILES) 
 	$(CXX) $(CXX_FLAGS) -o $(OUTPUT_BIN) $(OBJ_FILES) $(CXX_LIBS) $(CXX_LIBS_TEST)
 
+rebuild: clean build
+
+
 tidy: $(TIDY_FILES)
 	@true
 
@@ -41,5 +44,5 @@ test: build
 clean:
 	rm -rf $(OUTPUT_FOLDER)
 
-.PHONY: build prep test clean tidy
+.PHONY: build rebuild prep test clean tidy
 .DEFAULT_GOAL := test

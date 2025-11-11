@@ -26,6 +26,10 @@ std::vector<std::any> ops(const std::vector<std::string>& op,
       results.push_back(trie.search(values[i].c_str()));
     } else if (op[i] == "startsWith") {
       results.push_back(trie.startsWith(values[i].c_str()));
+    } else if (op[i] == "remove") {
+      results.push_back(trie.remove(values[i].c_str()));
+    } else {
+      throw std::runtime_error("Unknown operation: " + op[i]);
     }
   }
   return results;
@@ -55,4 +59,82 @@ TEST(ImplementTrie, BasicOperations) {
       FAIL() << "Unexpected type in results";
     }
   }
+}
+
+TEST(ImplementTrie, WordList) {
+  lc_libs::Trie trie;
+  std::vector<std::string> words{"hello", "hell", "heaven", "heavy"};
+  trie.insert(words);
+
+  for (const auto& word : words) {
+    EXPECT_TRUE(trie.search(word.c_str())) << "Failed to find word: " << word;
+  }
+
+  auto words_in_trie = trie.get_all_words();
+  std::sort(words.begin(), words.end());
+  EXPECT_EQ(words_in_trie, words);
+
+  EXPECT_TRUE(trie.remove("hell"));
+  EXPECT_FALSE(trie.remove("hell"));
+  EXPECT_FALSE(trie.search("hell"));
+  EXPECT_TRUE(trie.search("hello"));
+  EXPECT_TRUE(trie.remove("hello"));
+  EXPECT_FALSE(trie.search("hello"));
+  EXPECT_TRUE(trie.search("heaven"));
+  EXPECT_TRUE(trie.search("heavy"));
+}
+
+void erase(std::vector<std::string>& vec,
+           std::initializer_list<std::string> values) {
+  for (const auto& value : values) {
+    vec.erase(std::remove(vec.begin(), vec.end(), value), vec.end());
+  }
+}
+
+TEST(ImplementTrie, WordListInternal) {
+  lc_libs::Trie trie;
+  std::vector<std::string> words{"hello", "hell", "heaven", "heavy"};
+  trie.insert(words);
+
+  auto words_in_trie = trie.get_all_words(true);
+  std::sort(words.begin(), words.end());
+
+  std::vector<std::string> internal_words{"h",     "he",      "hea",    "heav",
+                                          "heave", "heaven$", "heavy$", "hel",
+                                          "hell",  "hell$",   "hello$"};
+  EXPECT_EQ(words_in_trie, internal_words);
+
+  // Removing the word hell. The end word marker is removed, however the branch
+  // still remains because it is a prefix for hello.
+  EXPECT_TRUE(trie.remove("hell"));
+  erase(internal_words, {"hell$"});
+
+  EXPECT_EQ(trie.get_all_words(true), internal_words);
+
+  // Trying to remove hell again should fail
+  EXPECT_FALSE(trie.remove("hell"));
+  EXPECT_EQ(trie.get_all_words(true), internal_words);
+
+  // Trying to search hell again should fail.
+  EXPECT_FALSE(trie.search("hell"));
+
+  EXPECT_TRUE(trie.search("hello"));
+  EXPECT_TRUE(trie.remove("hello"));
+  // Now hello, hell, hel should be removed from the internal words.
+  erase(internal_words, {"hello$", "hell", "hel"});
+  EXPECT_EQ(trie.get_all_words(true), internal_words);
+  EXPECT_FALSE(trie.search("hello"));
+
+  // Erase heaven
+  EXPECT_TRUE(trie.search("heaven"));
+  EXPECT_TRUE(trie.remove("heaven"));
+  erase(internal_words, {"heaven$", "heave"});
+  EXPECT_EQ(trie.get_all_words(true), internal_words);
+
+  // Final erasure
+  EXPECT_TRUE(trie.search("heavy"));
+
+  EXPECT_TRUE(trie.remove("heavy"));
+  erase(internal_words, {"heavy$", "heav", "hea", "he", "h"});
+  EXPECT_EQ(trie.get_all_words(true), internal_words);
 }
