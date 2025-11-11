@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <string>
 #include <vector>
@@ -47,14 +48,14 @@ class Trie {
           _nodes[in].children[idx] = kLeafValue;
           return;
         } else {
-          next = newNode();
+          next = newNode(*c);
           _nodes[in].children[idx] = next;
         }
       } else if (next == kLeafValue) {
         if (*(c + 1) == 0) {
           break;
         } else {
-          _nodes[in].children[idx] = next = newNode();
+          _nodes[in].children[idx] = next = newNode(*c);
           _nodes[next].is_eow = true;
         }
       }
@@ -71,6 +72,55 @@ class Trie {
       insert(word);
     }
   }
+
+  /**
+   * Removes a word from the trie.
+   * Returns true if the word was removed, false if the word was not found.
+   */
+  bool remove(const char* word) {
+    std::vector<T> path{get_path(word)};
+    if (path.empty()) {
+      return false;
+    }
+
+    if (path.back() == kLeafValue) {
+      // Special case: word ends at a leaf
+      path.pop_back();
+      if (path.empty()) {
+        return false;
+      }
+      T parent = path.back();
+      char last_char = word[path.size() - 1];
+      uint8_t idx = last_char - 'a';
+      _nodes[parent].children[idx] = 0;
+    } else {
+      // Normal case
+      T in = path.back();
+      _nodes[in].is_eow = false;
+    }
+
+    while (!path.empty()) {
+      const auto in = path.back();
+      path.pop_back();
+      if (_nodes[in].has_children() || _nodes[in].is_eow) {
+        break;
+      }
+      // This node can be erased.
+      // Update the parent first
+      if (!path.empty()) {
+        _nodes[path.back()].children[_nodes[in].value - 'a'] = 0;
+      }
+      freeNode(in);
+    }
+
+    return true;
+  }
+
+  /**
+   * Removes a word from the trie.
+   * Returns true if the word was removed, false if the word was not found.
+   */
+  bool remove(const std::string& word) { return remove(word.c_str()); }
 
   /**
    * Returns true if the word is in the trie.
@@ -171,22 +221,74 @@ class Trie {
     return true;
   }
 
+  /**
+   * Calls func for each word in the trie.
+   * Note: The words are generated in lexicographical order.
+   */
+  void for_each_word(const std::function<void(const std::string&)>& func,
+                     std::string current = "", size_t in = 0,
+                     bool internal = false) const {
+    const char* end_char = internal ? "$" : "";
+
+    if (_nodes[in].is_eow) {
+      func(current + end_char);
+    }
+    for (size_t i = 0; i < _nodes[in].children.size(); ++i) {
+      size_t next = _nodes[in].children[i];
+      if (next == 0) {
+        continue;
+      }
+      char c = static_cast<char>(i + 'a');
+      if (next == kLeafValue) {
+        func(current + c + end_char);
+      } else {
+        if (internal) {
+          func(current + c);
+        }
+        for_each_word(func, current + c, next, internal);
+      }
+    }
+  }
+
+  /**
+   * Returns all words in the trie.
+   * Note: The words are generated in lexicographical order.
+   */
+  std::vector<std::string> get_all_words(bool internal = false) const {
+    std::vector<std::string> words;
+    for_each_word([&words](const std::string& word) { words.push_back(word); },
+                  "", 0, internal);
+    return words;
+  }
+
  private:
   constexpr static inline const T kLeafValue = std::numeric_limits<T>::max();
 
   struct alignas(32) Node {
     std::array<T, 'z' - 'a' + 1> children{};
+    char value{};
     bool is_eow{};
     bool is_used;
+
+    bool has_children() const {
+      for (const auto& c : children) {
+        if (c != 0) {
+          return true;
+        }
+      }
+      return false;
+    }
   };
 
   std::vector<Node> _nodes;
   std::vector<T> _free_nodes;
 
-  size_t newNode() {
+  T newNode(char value) {
     if (!_free_nodes.empty()) {
-      size_t n = _free_nodes.back();
+      T n = _free_nodes.back();
       _free_nodes.pop_back();
+      _nodes[n].is_used = true;
+      _nodes[n].value = value;
       return n;
     }
 
@@ -194,12 +296,47 @@ class Trie {
     assert(sz < kLeafValue);
     _nodes.resize(sz + 1);
     _nodes[sz].is_used = true;
+    _nodes[sz].value = value;
     return sz;
   }
 
-  void freeNode(size_t n) {
+  void freeNode(T n) {
     _nodes[n].is_used = false;
+    _nodes[n].value = 0;
+    _nodes[n].children.fill(0);
     _free_nodes.push_back(n);
+  }
+
+  bool is_eow(T n) const { return n == kLeafValue ? true : _nodes[n].is_eow; };
+  bool has_children(T n) const {
+    return n == kLeafValue ? false : _nodes[n].has_children();
+  };
+
+  std::vector<T> get_path(const char* word) const {
+    std::vector<T> path;
+    T in{0};
+    for (const char* c = word; *c; ++c) {
+      path.push_back(in);
+      const uint8_t idx = *c - 'a';
+      T next = _nodes[in].children[idx];
+      if (next == 0) {
+        return {};
+      }
+      if (next == kLeafValue) {
+        if (*(c + 1) == 0) {
+          path.push_back(kLeafValue);
+          return path;
+        } else {
+          return {};
+        }
+      }
+      in = next;
+    }
+    if (_nodes[in].is_eow == false) {
+      return {};
+    }
+    path.push_back(in);
+    return path;
   }
 };
 }  // namespace lc_libs

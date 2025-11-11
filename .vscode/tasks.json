@@ -8,7 +8,7 @@
             "args": [
                 "-C",
                 "${fileDirname}",
-                "build"
+                "rebuild"
             ],
             "group": {
                 "kind": "build",
