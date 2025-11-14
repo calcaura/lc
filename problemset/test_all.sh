@@ -2,7 +2,7 @@
 cd "$(dirname "$0")" || exit 1
 source ../libs/bash/console.sh || exit 2
 
-DIRS=$(find -name 'Makefile' | grep -v _template | xargs dirname | sort -u)
+DIRS=$(find -name 'Makefile' -not -path '*/build/*' | grep -v _template | xargs dirname | sort -u)
 TMP_DIR=$(mktemp -d)
 
 
