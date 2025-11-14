@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     gdb \
     lldb \
     git \
+    ninja-build \
     sudo \
     vim \
     libgtest-dev \
@@ -26,6 +27,43 @@ RUN cd /usr/src/gtest && \
     mkdir /usr/local/lib/googletest && \
     ln -s /usr/lib/libgtest.a /usr/local/lib/googletest/libgtest.a && \
     ln -s /usr/lib/libgtest_main.a /usr/local/lib/googletest
+
+## Install abseil 20250814.1
+ENV ABSEIL_VERSION=20250814.1
+RUN curl -Lo abseil-cpp-${ABSEIL_VERSION}.tar.gz \
+    https://github.com/abseil/abseil-cpp/releases/download/${ABSEIL_VERSION}/abseil-cpp-${ABSEIL_VERSION}.tar.gz && \
+    tar -xzf abseil-cpp-${ABSEIL_VERSION}.tar.gz -C /usr/src/ && \
+    rm abseil-cpp-${ABSEIL_VERSION}.tar.gz && \
+    cd /usr/src/abseil-cpp-${ABSEIL_VERSION} && \
+    mkdir build && \
+    cd build && \
+    cmake -S .. -B . \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DBUILD_SHARED_LIBS=ON \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON &&\
+    cmake --build . -j$(nproc) && \
+    sudo cmake --install . --prefix /usr/local
+
+
+## Install Google Benchmark v1.9.4
+ENV BENCHMARK_VERSION=v1.9.4
+RUN curl -Lo benchmark-1.9.4.tar.gz \
+    https://github.com/google/benchmark/archive/refs/tags/v1.9.4.tar.gz && \
+    tar -xzf benchmark-1.9.4.tar.gz -C /usr/src/ && \
+    rm benchmark-1.9.4.tar.gz && \
+    cd /usr/src/benchmark-1.9.4 && \
+    mkdir build && \
+    cd build && \
+    cmake -S .. -B . \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON \
+    -DBENCHMARK_ENABLE_GTEST_TESTS=OFF \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON && \
+    cmake --build . -j$(nproc) && \
+    sudo cmake --install . --prefix /usr/local
+
 
 ## Configure default user
 ARG HOST_USER
