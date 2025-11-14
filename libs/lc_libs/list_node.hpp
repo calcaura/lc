@@ -131,9 +131,17 @@ struct ListNodeBase {
   ~ListNodeBase() { delete next; }
 
   /**
-   * Merge two sroted lists
+   * Merge two sorted lists
    */
   static ListNodeBase* merge(ListNodeBase* list1, ListNodeBase* list2) {
+    return ListNodeBase::merge_sorted_lists(list1, list2);
+  }
+
+  /**
+   * Merge two sorted lists
+   */
+  static ListNodeBase* merge_sorted_lists(ListNodeBase* list1,
+                                          ListNodeBase* list2) {
     ListNodeBase head;
     ListNodeBase* crt{&head};
 
@@ -161,6 +169,73 @@ struct ListNodeBase {
       }
     }
     return head.unlink();
+  }
+
+  ListNodeBase* middle_node() {
+    ListNodeBase* slow = this;
+    ListNodeBase* fast = this;
+    while (fast && fast->next) {
+      slow = slow->next;
+      fast = fast->next->next;
+    }
+    return slow;
+  }
+
+  /**
+   * Split the list into two halves at the middle node.
+   * If the list has an even number of nodes, the first half will have one
+   * less node than the second half.
+   * Returns a pair of pointers to the heads of the two halves.
+   */
+  std::pair<ListNodeBase*, ListNodeBase*> middle_split() {
+    ListNodeBase* middle = nullptr;
+    ListNodeBase* slow = this;
+    ListNodeBase* fast = this;
+    while (fast && fast->next) {
+      middle = slow;
+      slow = slow->next;
+      fast = fast->next->next;
+    }
+
+    if (!middle) {
+      return {this, nullptr};
+    }
+    auto next = middle->next;
+    middle->next = nullptr;
+    return {this, next};
+  }
+
+  /**
+   * Sort the linked list using merge sort algorithm.
+   * Returns the head of the sorted list.
+   */
+  static ListNodeBase* sort(ListNodeBase* head) {
+    // Base case: empty list or single node
+    if (!head || !head->next) {
+      return head;
+    }
+
+    // If there are two nodes, just swap if out of order
+    if (!head->next->next) {
+      if (head->val > head->next->val) {
+        auto second = head->next;
+        head->next = second->next;
+        second->next = head;
+        return second;
+      } else {
+        return head;
+      }
+    }
+
+    // Split the list into two halves
+    auto [first_half, second_half] = head->middle_split();
+
+    // Recursively sort both halves
+    first_half = sort(first_half);
+    second_half = sort(second_half);
+
+    // Merge the sorted halves
+    return merge_sorted_lists(first_half, second_half);
   }
 };
 
